@@ -10,7 +10,7 @@ from dateutil.rrule import MONTHLY, rrule
 
 from log import get_logger
 
-logger = get_logger(__name__)
+LOGGER = get_logger(__name__)
 
 SID0050 = [
     '1101', '1102', '1216', '1301', '1303', '1326', '1402', '1722', '2002',
@@ -105,7 +105,6 @@ def save_csv(dataset, f):
         fp.write(dataset.export('csv'))
 
 
-
 def fetch_history(sid, interval):
     now = datetime.now()
     months = MonthIter(now.year, now.month)
@@ -115,12 +114,12 @@ def fetch_history(sid, interval):
     # fetch
     stock = twstock.Stock(sid, initial_fetch=False)
     for year, month in months:
-        logger.info(f'Fetching {sid} {year}/{month}')
+        LOGGER.info(f'Fetching {sid} {year}/{month}')
         month_data = stock.fetch(year, month)
         sleep(interval)
 
         if len(month_data) == 0:
-            logger.info(f'This month ({year}/{month}) has no data, stop here')
+            LOGGER.info(f'This month ({year}/{month}) has no data, stop here')
             break
 
         for day_data in month_data:
@@ -128,8 +127,9 @@ def fetch_history(sid, interval):
 
     return history
 
+
 def save_history(history, f):
-    logger.info(f'Saving history to {f}')
+    LOGGER.info(f'Saving history to {f}')
 
     # use tablib to save as csv file
     headers = ('date', 'capacity', 'turnover', 'open', 'high', 'low', 'close',
@@ -145,25 +145,36 @@ def save_history(history, f):
 
     save_csv(dataset, f)
 
+
 def main():
     # args = parse_arg()
     # sid = args.stock_number
     # interval = args.interval
-    interval = 2
-
+    interval = 5
 
     for sid in SID0050:
+        f = f'sid0050/sid{sid}.csv'
+
+        if os.path.exists(f):
+            LOGGER.info(f'{f} exists, skip')
+            continue
+
         try:
             history = fetch_history(sid, interval)
         except Exception as e:
             print(e)
             continue
 
-        f = f'sid0050/sid{sid}.csv'
         os.makedirs(os.path.dirname(f), exist_ok=True)
-        save_history(history,f)
-    
+        save_history(history, f)
+
     for sid in SID0051:
+        f = f'sid0050/sid{sid}.csv'
+
+        if os.path.exists(f):
+            LOGGER.info(f'{f} exists, skip')
+            continue
+
         try:
             history = fetch_history(sid, interval)
         except Exception as e:
@@ -171,9 +182,8 @@ def main():
             continue
 
         history = fetch_history(sid, interval)
-        f = f'sid0051/sid{sid}.csv'
         os.makedirs(os.path.dirname(f), exist_ok=True)
-        save_history(history,f)
+        save_history(history, f)
 
 
 if __name__ == "__main__":
