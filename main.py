@@ -6,18 +6,10 @@ from time import sleep
 
 import tablib
 import twstock
-from dateutil.rrule import MONTHLY, rrule
 
 from log import get_logger
 
 LOGGER = get_logger(__name__)
-
-
-def get_month_range_until_now(year, month):
-    start = datetime(year, month, 1)
-    end = datetime.now()
-    return rrule(MONTHLY, dtstart=start, until=end)
-
 
 class DateTimeIter(object):
     def __init__(self, date, delta):
