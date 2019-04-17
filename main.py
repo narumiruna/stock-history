@@ -11,6 +11,7 @@ from log import get_logger
 
 LOGGER = get_logger(__name__)
 
+
 class DateTimeIter(object):
     def __init__(self, date, delta):
         self.date = date
@@ -66,6 +67,7 @@ def parse_arg():
         type=int,
         default=5,
         help='Fetech interval in seconds')
+    parser.add_argument('-f', '--file', type=str, default=None)
 
     return parser.parse_args()
 
@@ -118,14 +120,31 @@ def save_history(history, f):
     save_csv(dataset, f)
 
 
+def load_txt(f):
+    lines = []
+    with open(f, 'r') as fp:
+        for line in fp.readlines():
+            lines.append(line.strip())
+    return lines
+
+
+def fetch_history_and_save(stock_id, interval, output_dir):
+    history = fetch_history(stock_id, interval)
+
+    if history.values():
+        f = os.path.join(output_dir, '{}.csv'.format(stock_id))
+        save_history(history, f)
+
+
 def main():
     args = parse_arg()
 
-    history = fetch_history(args.stock, args.interval)
-
-    if history.values():
-        f = os.path.join(args.output_dir, '{}.csv'.format(args.stock))
-        save_history(history, f)
+    if args.file is not None:
+        lines = load_txt(args.file)
+        for line in lines:
+            fetch_history_and_save(line, args.interval, args.output_dir)
+    else:
+        fetch_history_and_save(args.stock, args.interval, args.output_dir)
 
 
 if __name__ == "__main__":
